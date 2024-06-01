@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelime Hatırlatıcı</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #word {
+            font-size: 2em;
+            cursor: pointer;
+        }
+        #translation {
+            margin-top: 20px;
+            font-size: 1.5em;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kelime Hatırlatıcı</h1>
+    <input type="file" id="upload" accept=".xlsx, .xls" />
+    <div id="wordContainer">
+        <div id="word">Kelime Yükleniyor...</div>
+        <div id="translation" style="display:none;">Çeviri</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script>
+        let words = [];
+        let currentWord = {};
+
+        document.getElementById('upload').addEventListener('change', handleFile, false);
+        document.getElementById('word').addEventListener('click', showTranslation, false);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                words = jsonData.filter(row => row.length >= 2); // Only include rows with at least 2 columns
+                getRandomWord();
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function getRandomWord() {
+            if (words.length === 0) {
+                document.getElementById('word').innerText = 'No words found';
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * words.length);
+            currentWord = { english: words[randomIndex][0], turkish: words[randomIndex][1] };
+
+            document.getElementById('word').innerText = currentWord.english;
+            document.getElementById('translation').style.display = 'none';
+            document.getElementById('translation').innerText = '';
+        }
+
+        function showTranslation() {
+            document.getElementById('translation').innerText = currentWord.turkish;
+            document.getElementById('translation').style.display = 'block';
+            setTimeout(getRandomWord, 3000); // Show the next word after 3 seconds
+        }
+    </script>
+</body>
+</html>
