@@ -3,37 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelime Hatırlatıcı</title>
+    <title>English Dictionary</title>
     <style>
         body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: white;
+            margin: 0;
             font-family: Arial, sans-serif;
         }
-        #word {
-            font-size: 2em;
+        .container {
+            text-align: center;
+        }
+        .circle {
+            width: 300px;
+            height: 300px;
+            background-color: black;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            flex-direction: column;
             cursor: pointer;
         }
-        #translation {
-            margin-top: 20px;
-            font-size: 1.5em;
-            color: green;
+        .translation {
+            font-size: 18px;
+            color: lightgray;
         }
     </style>
 </head>
 <body>
-    <h1>Kelime Hatırlatıcı</h1>
-    <input type="file" id="upload" accept=".xlsx, .xls" />
-    <div id="wordContainer">
-        <div id="word">Kelime Yükleniyor...</div>
-        <div id="translation" style="display:none;">Çeviri</div>
+    <div class="container">
+        <h1>ENGLISH DICTIONARY</h1>
+        <input type="file" id="fileInput" />
+        <div class="circle" onclick="showTranslation()">
+            <div class="word" id="word">HI</div>
+            <div class="translation" id="translation">MERHABA</div>
+        </div>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
     <script>
         let words = [];
-        let currentWord = {};
+        let currentWordIndex = 0;
 
-        document.getElementById('upload').addEventListener('change', handleFile, false);
-        document.getElementById('word').addEventListener('click', showTranslation, false);
+        document.getElementById('translation').style.display = 'none';
+
+        document.getElementById('fileInput').addEventListener('change', handleFile, false);
 
         function handleFile(e) {
             const file = e.target.files[0];
@@ -42,35 +61,33 @@
             reader.onload = function(event) {
                 const data = new Uint8Array(event.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                words = json.map(row => ({ english: row[0], turkish: row[1] })).filter(row => row.english && row.turkish);
 
-                words = jsonData.filter(row => row.length >= 2); // Only include rows with at least 2 columns
-                getRandomWord();
+                if (words.length > 0) {
+                    currentWordIndex = 0;
+                    document.getElementById('word').innerText = words[currentWordIndex].english;
+                    document.getElementById('translation').innerText = words[currentWordIndex].turkish;
+                    document.getElementById('translation').style.display = 'none';
+                }
             };
 
             reader.readAsArrayBuffer(file);
         }
 
-        function getRandomWord() {
-            if (words.length === 0) {
-                document.getElementById('word').innerText = 'No words found';
-                return;
-            }
-
-            const randomIndex = Math.floor(Math.random() * words.length);
-            currentWord = { english: words[randomIndex][0], turkish: words[randomIndex][1] };
-
-            document.getElementById('word').innerText = currentWord.english;
-            document.getElementById('translation').style.display = 'none';
-            document.getElementById('translation').innerText = '';
-        }
-
         function showTranslation() {
-            document.getElementById('translation').innerText = currentWord.turkish;
-            document.getElementById('translation').style.display = 'block';
-            setTimeout(getRandomWord, 3000); // Show the next word after 3 seconds
+            const translationElement = document.getElementById('translation');
+            if (translationElement.style.display === 'none') {
+                translationElement.style.display = 'block';
+            } else {
+                currentWordIndex = (currentWordIndex + 1) % words.length;
+                document.getElementById('word').innerText = words[currentWordIndex].english;
+                document.getElementById('translation').innerText = words[currentWordIndex].turkish;
+                translationElement.style.display = 'none';
+            }
         }
     </script>
 </body>
