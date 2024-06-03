@@ -68,14 +68,18 @@
                 words = json.map(row => ({ english: row[0], turkish: row[1] })).filter(row => row.english && row.turkish);
 
                 if (words.length > 0) {
-                    currentWordIndex = 0;
-                    document.getElementById('word').innerText = words[currentWordIndex].english;
-                    document.getElementById('translation').innerText = words[currentWordIndex].turkish;
-                    document.getElementById('translation').style.display = 'none';
+                    showRandomWord();
                 }
             };
 
             reader.readAsArrayBuffer(file);
+        }
+
+        function showRandomWord() {
+            currentWordIndex = Math.floor(Math.random() * words.length);
+            document.getElementById('word').innerText = words[currentWordIndex].english;
+            document.getElementById('translation').innerText = words[currentWordIndex].turkish;
+            document.getElementById('translation').style.display = 'none';
         }
 
         function showTranslation() {
@@ -83,10 +87,7 @@
             if (translationElement.style.display === 'none') {
                 translationElement.style.display = 'block';
             } else {
-                currentWordIndex = (currentWordIndex + 1) % words.length;
-                document.getElementById('word').innerText = words[currentWordIndex].english;
-                document.getElementById('translation').innerText = words[currentWordIndex].turkish;
-                translationElement.style.display = 'none';
+                showRandomWord();
             }
         }
     </script>
