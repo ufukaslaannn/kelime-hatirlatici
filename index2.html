@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Dictionary</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: white;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        .circle {
+            width: 300px;
+            height: 300px;
+            background-color: black;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            flex-direction: column;
+            cursor: pointer;
+        }
+        .translation {
+            font-size: 18px;
+            color: lightgray;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ENGLISH DICTIONARY</h1>
+        <input type="file" id="fileInput" />
+        <div class="circle" onclick="showTranslation()">
+            <div class="word" id="word">HI</div>
+            <div class="translation" id="translation">MERHABA</div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
+    <script>
+        let words = [];
+        let currentWordIndex = 0;
+
+        document.getElementById('translation').style.display = 'none';
+
+        document.getElementById('fileInput').addEventListener('change', handleFile, false);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                words = json.map(row => ({ english: row[0], turkish: row[1] })).filter(row => row.english && row.turkish);
+
+                if (words.length > 0) {
+                    showRandomWord();
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function showRandomWord() {
+            currentWordIndex = Math.floor(Math.random() * words.length);
+            document.getElementById('word').innerText = words[currentWordIndex].english;
+            document.getElementById('translation').innerText = words[currentWordIndex].turkish;
+            document.getElementById('translation').style.display = 'none';
+        }
+
+        function showTranslation() {
+            const translationElement = document.getElementById('translation');
+            if (translationElement.style.display === 'none') {
+                translationElement.style.display = 'block';
+            } else {
+                showRandomWord();
+            }
+        }
+    </script>
+</body>
+</html>
